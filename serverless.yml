@@ -1,0 +1,36 @@
+service: order-checkout
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  stage: dev
+  region: us-east-2
+
+plugins:
+  - serverless-step-functions
+
+functions:
+  checkInventory:
+    handler: handler.checkInventory
+
+stepFunctions:
+  stateMachines:
+    hello:
+      events:
+        - http:
+            path: order/checkout
+            method: POST
+      definition:
+        Comment: "This step function handles order checkout process"
+        StartAt: CheckInventory
+        States:
+          CheckInventory:
+            Type: Task
+            Resource:
+              Fn::GetAtt: [checkInventory, Arn]
+            End: true
+
+resources:
+  Resources: ${file(resources.yml)}
